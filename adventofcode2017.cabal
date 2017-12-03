@@ -32,7 +32,7 @@ executable second
   hs-source-dirs:      days
   main-is:             Second.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
+  build-depends:       base, text
   default-language:    Haskell2010
 
 source-repository head
