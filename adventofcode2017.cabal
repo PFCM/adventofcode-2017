@@ -42,6 +42,12 @@ executable third
   build-depends:       base, containers
   default-language:    Haskell2010
 
+executable fourth
+  hs-source-dirs:      days
+  main-is:             Fourth.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base, text
+  default-language:    Haskell2010
 
 source-repository head
   type:     git
