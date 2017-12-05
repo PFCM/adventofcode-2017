@@ -56,4 +56,14 @@ steps2' jumpTable = go jumpTable 0 0
 parse :: T.Text -> Either String [Int]
 parse = fmap (map fst) . mapM (signed decimal) . T.lines
 
-main = T.IO.interact (T.pack . show . fmap countSteps' . parse)
+runAlgol :: ([Int] -> Int) -> T.Text -> T.Text
+runAlgol alg val = msg
+  where
+    result = alg <$> parse val
+    msg =
+      T.pack $
+      case result of
+        Left err -> "Parse error: " ++ err
+        Right res -> show res
+
+main = T.IO.interact (runAlgol countSteps')
