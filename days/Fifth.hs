@@ -5,16 +5,33 @@ import qualified Data.Vector as V
 import Data.Vector ((!?), (//))
 
 countSteps :: [Int] -> Int
-countSteps = length . steps1 . V.fromList
+countSteps = length . steps2 . V.fromList
 
+-- part 1
 -- this doesn't feel real great
 steps1 :: V.Vector Int -> [Int]
 steps1 jumpTable = go jumpTable [0]
   where
     go _ [] = []
-    go j (p:xs) =
-      case j !? p of
-        Just jump -> go (j // [(p, jump + 1)]) ((p + jump) : p : xs)
+    go jtab (p:xs) =
+      case jtab !? p of
+        Just jump -> go (jtab // [(p, jump + 1)]) $ (p + jump) : p : xs
+        Nothing -> xs
+
+-- part 2
+-- it's just as unpleasant
+-- worse even, because now we're keeping a _lot_ of results
+steps2 :: V.Vector Int -> [Int]
+steps2 jumpTable = go jumpTable [0]
+  where
+    go _ [] = []
+    go jtab (p:xs) =
+      case jtab !? p of
+        Just jump -> go (jtab // [(p, jump + inc)]) $ (p + jump) : p : xs
+          where inc =
+                  if jump >= 3
+                    then -1
+                    else 1
         Nothing -> xs
 
 parse :: T.Text -> Either String [Int]
