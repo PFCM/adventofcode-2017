@@ -1,19 +1,21 @@
-import Data.Array
-import Data.Ix (inRange)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T.IO
 import Data.Text.Read (decimal, signed)
+import qualified Data.Vector as V
+import Data.Vector ((!?), (//))
 
 countSteps :: [Int] -> Int
-countSteps vals = length . steps . listArray (0, length vals - 1) $ vals
+countSteps = length . steps1 . V.fromList
 
-steps :: Array Int Int -> [Int]
-steps jumps = go jumps [0]
+-- this doesn't feel real great
+steps1 :: V.Vector Int -> [Int]
+steps1 jumpTable = go jumpTable [0]
   where
     go _ [] = []
-    go j (p:xs)
-      | inRange (bounds j) p = go (j // [(p, j ! p + 1)]) ((p + j ! p) : p : xs)
-      | otherwise = xs
+    go j (p:xs) =
+      case j !? p of
+        Just jump -> go (j // [(p, jump + 1)]) ((p + jump) : p : xs)
+        Nothing -> xs
 
 parse :: T.Text -> Either String [Int]
 parse = fmap (map fst) . mapM (signed decimal) . T.lines
