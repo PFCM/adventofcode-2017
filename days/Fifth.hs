@@ -14,6 +14,7 @@ countSteps' = steps2' . V.fromList
 
 -- part 1
 -- this doesn't feel real great
+-- (this would be because it is really stupid)
 steps1 :: V.Vector Int -> [Int]
 steps1 jumpTable = go jumpTable [0]
   where
@@ -52,17 +53,6 @@ steps2' jumpTable = go jumpTable 0 0
                     else 1
         Nothing -> steps
 
--- try the ST monad so we don't have to keep everything
--- stepsST :: V.Vector Int -> Int
--- stepsST jumpTable = runST $ do
---   p <- newSTRef 0
---   steps <- newSTRef 0
---   jt <- V.thaw jumpTable
---   run jt p
---   where
---     run jtab pos =
---       case jtab !? pos of
---         Just jump ->
 parse :: T.Text -> Either String [Int]
 parse = fmap (map fst) . mapM (signed decimal) . T.lines
 
