@@ -1,6 +1,7 @@
 import qualified Data.Map.Strict as M
 import Data.Maybe (maybeToList)
-import Debug.Trace
+import Data.Monoid
+import qualified Data.Set as S
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
@@ -33,16 +34,44 @@ buildTree :: [ProgramNodeInput] -> ProgramTree
 buildTree inputs = go inputs M.empty
   where
     getChildren nodes = concat . maybeToList . multiMaybeLookup nodes . children
-    -- TODO this is broken because it could be that the root node is the last
-    -- one of the final intermediate list after all the other levels have been
-    -- filtered out. In this case `leftovers` will be 0 and we're recursing forever
+    go [] nodes = findRoot nodes -- edge case, hopefully not often :(
     go [x] nodes = convertNode x . getChildren nodes $ x
-    go inputs seen = go (traceShow (length leftovers) leftovers) newSeen
+    go inputs seen = go leftovers newSeen
       where
         (leftovers, newSeen) = foldl maybeInsert ([], seen) inputs
 
-part1 :: [ProgramNodeInput] -> String
-part1 = show . _name . buildTree
+findRoot :: M.Map String ProgramTree -> ProgramTree
+findRoot progMap = root
+  where
+    root = head remains
+      where
+        remains =
+          filter ((`S.notMember` allChildrenNames) . _name) . map snd . M.toList $
+          progMap
+    allChildrenNames =
+      foldl
+        (\a b -> S.union a . S.fromList . map _name . _children $ b)
+        S.empty
+        progMap
+
+part1 :: ProgramTree -> String
+part1 = show . _name
+
+-- part two -- find a child whose weight doesn't match its siblings and return
+-- what it should be
+part2 :: ProgramTree -> String
+part2 = show . unMatchedWeight
+
+-- seems like this may recompute a lot of the sums
+unMatchedWeight :: ProgramTree -> Int
+unMatchedWeight node =
+  let sums = map treeSum . _children $ node
+  in head sums
+
+treeSum :: ProgramTree -> Int
+treeSum node
+  | null . _children $ node = _weight node
+  | otherwise = getSum . foldMap (Sum . treeSum) . _children $ node
 
 -- INPUT, it seemed like a good idea to learn about parsec...
 data ProgramNodeInput = ProgramNodeInput
@@ -53,9 +82,7 @@ data ProgramNodeInput = ProgramNodeInput
 
 childParser :: Parser [String]
 childParser = do
-  space
-  string "->"
-  space
+  string " -> "
   sepBy1 (many1 lower) (string ", ")
 
 nodeParser :: Parser ProgramNodeInput
@@ -76,5 +103,8 @@ parseStdInput p = do
 
 main = do
   inputs <- parseStdInput inputParser
+  let tree = buildTree inputs
   putStrLn "Part 1"
-  print $ part1 inputs
+  print $ part1 tree
+  putStrLn "Part 2"
+  print $ part2 tree
