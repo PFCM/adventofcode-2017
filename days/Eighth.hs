@@ -1,5 +1,4 @@
 import qualified Data.Map as M
-import Debug.Trace
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
@@ -26,9 +25,8 @@ data Instruction = Instruction
   , tCond :: Cond
   }
 
--- PART 1
-updateVal :: Registers -> Instruction -> Registers
-updateVal rs inst = M.alter update name rs
+updateVal :: (Registers, Int) -> Instruction -> (Registers, Int)
+updateVal (rs, maxVal) inst = (newRs, newMax)
   where
     name = tRegister inst
     val' = tVal inst
@@ -36,17 +34,19 @@ updateVal rs inst = M.alter update name rs
       case tOp inst of
         Inc -> val'
         Dec -> -val'
-    update oldVal = Just (maybe val (+ val) oldVal)
+    newVal = maybe val (+ val) $ M.lookup name rs
+    newRs = M.insert name newVal rs
+    newMax = max newVal maxVal
 
 -- TODO: if the cond is on a register that doesn't exist we should add it into
 -- the register map
-runInstructions :: [Instruction] -> Registers
-runInstructions = foldl step M.empty
+runInstructions :: [Instruction] -> (Registers, Int)
+runInstructions = foldl step (M.empty, 0)
   where
-    step reg inst =
+    step (reg, mVal) inst =
       if tCond inst reg
-        then updateVal reg inst
-        else reg
+        then updateVal (reg, mVal) inst
+        else (reg, mVal)
 
 makeCond :: String -> Condition -> Int -> Cond
 makeCond reg cond val = op val . M.findWithDefault 0 reg
@@ -93,5 +93,8 @@ parseStdInput p = do
 
 main = do
   inputs <- parseStdInput inputParser
+  let (registers, maxVal) = runInstructions inputs
   putStrLn "Part 1: "
-  print (maximum . runInstructions $ inputs)
+  print (maximum registers)
+  putStrLn "Part 2: "
+  print maxVal
