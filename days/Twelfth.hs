@@ -8,6 +8,17 @@ type Graph = M.Map Node (S.Set Node)
 
 type Node = Int
 
+-- keep doing depth first searches until no nodes are left.
+connectedComponents :: Graph -> [[Node]]
+connectedComponents graph = fst . M.foldrWithKey collect ([], S.empty) $ graph
+  where
+    collect node _ v@(comps, visited)
+      | node `S.member` visited = v
+      | otherwise =
+        let component = dfs node graph
+            newVisited = S.union visited . S.fromList $ component
+        in (component : comps, newVisited)
+
 -- do a depth first search, returning the nodes visited
 dfs :: Node -> Graph -> [Node]
 dfs start graph = go [start] []
@@ -49,3 +60,4 @@ main =
     let graph = fromLists parsed
     print . length . dfs 0 $ graph
     putStrLn "Part 2"
+    print . length . connectedComponents $ graph
