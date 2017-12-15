@@ -1,8 +1,21 @@
+import Data.Maybe (catMaybes)
 import Data.Vector ((!), (//))
 import qualified Data.Vector as V
 import Debug.Trace
 import Text.Parsec
 import Text.Parsec.String (Parser)
+
+-- part 2 keep trying delays until we can make it unscathed
+minDelay :: V.Vector (Maybe (Int, Int)) -> Int
+minDelay fwall = minDelayInner fwall 0
+
+-- was getting syntax errors defining this locally
+minDelayInner :: V.Vector (Maybe (Int, Int)) -> Int -> Int
+minDelayInner states delay =
+  case catMaybes . runSimplePath $ states of
+    [] -> delay
+    -- [0] -> delay
+    _ -> minDelayInner (stateStep states) (delay + 1)
 
 -- part 1, build an appropriate representation and see what happens
 advanceState :: (Int, Int) -> (Int, Int)
@@ -20,20 +33,22 @@ triangle y range =
 actualPos :: V.Vector (Maybe (Int, Int)) -> V.Vector (Maybe (Int, Int))
 actualPos = V.map (fmap (\(a, r) -> (triangle a r, r)))
 
-runSimplePath :: V.Vector (Maybe (Int, Int)) -> Int
-runSimplePath fwall = fst . foldl step (0, fwall) $ [0 .. length fwall - 1]
+stateStep :: V.Vector (Maybe (Int, Int)) -> V.Vector (Maybe (Int, Int))
+stateStep = fmap $ fmap advanceState
+
+runSimplePath :: V.Vector (Maybe (Int, Int)) -> [Maybe Int]
+runSimplePath fwall = fst . foldl step ([], fwall) $ [0 .. length fwall - 1]
   where
-    stateStep = fmap $ fmap advanceState
-    step (cost, state) pos =
+    step (costs, state) pos =
       case state ! pos of
         Just (fpos, range) ->
           let newState = stateStep state
               newCost =
                 if triangle fpos range == 0
-                  then cost + pos * range
-                  else cost
-          in (newCost, newState)
-        Nothing -> (cost, stateStep state)
+                  then Just (pos * range)
+                  else Nothing
+          in (newCost : costs, newState)
+        Nothing -> (Nothing : costs, stateStep state)
 
 fromList :: [(Int, Int)] -> V.Vector (Maybe (Int, Int))
 fromList vals = vec // initial
@@ -56,5 +71,6 @@ withStdInput p = do
 main =
   withStdInput parser >>= \parsed -> do
     putStrLn "Part 1"
-    print $ runSimplePath parsed
+    print . sum . catMaybes $ runSimplePath parsed
     putStrLn "Part 2"
+    print $ minDelay parsed
