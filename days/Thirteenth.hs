@@ -1,26 +1,39 @@
 import Data.Vector ((!), (//))
 import qualified Data.Vector as V
+import Debug.Trace
 import Text.Parsec
 import Text.Parsec.String (Parser)
 
 -- part 1, build an appropriate representation and see what happens
 advanceState :: (Int, Int) -> (Int, Int)
-advanceState (pos, range) = ((pos + 1) `mod` range, range)
+advanceState (pos, range) = (pos + 1, range)
+
+-- mod would give us a saw, we want to flip the second part down
+triangle :: Int -> Int -> Int
+triangle y range =
+  let range' = range - 1
+      saw = y `mod` (2 * range')
+  in if saw >= range'
+       then range - (saw `mod` range')
+       else saw
+
+actualPos :: V.Vector (Maybe (Int, Int)) -> V.Vector (Maybe (Int, Int))
+actualPos = V.map (fmap (\(a, r) -> (triangle a r, r)))
 
 runSimplePath :: V.Vector (Maybe (Int, Int)) -> Int
-runSimplePath fwall = fst . foldr step (0, fwall) $ [0 .. length fwall - 1]
+runSimplePath fwall = fst . foldl step (0, fwall) $ [0 .. length fwall - 1]
   where
-    stateStep = V.map (fmap advanceState)
-    step pos (cost, state) =
+    stateStep = fmap $ fmap advanceState
+    step (cost, state) pos =
       case state ! pos of
         Just (fpos, range) ->
           let newState = stateStep state
               newCost =
-                if fpos == 0
+                if triangle fpos range == 0
                   then cost + pos * range
                   else cost
           in (newCost, newState)
-        Nothing -> (cost, state)
+        Nothing -> (cost, stateStep state)
 
 fromList :: [(Int, Int)] -> V.Vector (Maybe (Int, Int))
 fromList vals = vec // initial
