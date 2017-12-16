@@ -1,4 +1,4 @@
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, mapMaybe)
 import Data.Vector ((!), (//))
 import qualified Data.Vector as V
 import Debug.Trace
@@ -6,16 +6,19 @@ import Text.Parsec
 import Text.Parsec.String (Parser)
 
 -- part 2 keep trying delays until we can make it unscathed
-minDelay :: V.Vector (Maybe (Int, Int)) -> Int
-minDelay fwall = minDelayInner fwall 0
+minDelay :: V.Vector (Maybe (Int, Int)) -> Maybe Int
+minDelay fwall =
+  minDelayInner fwall 0 $
+  traceShowId (foldr lcm 1 (mapMaybe (fmap snd) (V.toList fwall)))
 
 -- was getting syntax errors defining this locally
-minDelayInner :: V.Vector (Maybe (Int, Int)) -> Int -> Int
-minDelayInner states delay =
-  case catMaybes . runSimplePath $ states of
-    [] -> delay
-    -- [0] -> delay
-    _ -> minDelayInner (stateStep states) (delay + 1)
+minDelayInner :: V.Vector (Maybe (Int, Int)) -> Int -> Int -> Maybe Int
+minDelayInner states delay period
+  | delay <= period =
+    case catMaybes . runSimplePath $ states of
+      [] -> Just delay
+      _ -> minDelayInner (stateStep states) (delay + 1) period
+  | otherwise = Nothing
 
 -- part 1, build an appropriate representation and see what happens
 advanceState :: (Int, Int) -> (Int, Int)

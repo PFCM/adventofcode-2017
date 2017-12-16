@@ -62,11 +62,15 @@ part1 = show . _name
 part2 :: ProgramTree -> String
 part2 = show . unMatchedWeight
 
--- seems like this may recompute a lot of the sums
+-- seems like this will recompute a lot of the sums
 unMatchedWeight :: ProgramTree -> Int
-unMatchedWeight node =
-  let sums = map treeSum . _children $ node
-  in head sums
+unMatchedWeight node = undefined
+  -- let
+  --   sums = map treeSum . _children $ node
+  --   go n diff
+  --     |
+  --
+  -- in head sums
 
 treeSum :: ProgramTree -> Int
 treeSum node
