@@ -9,13 +9,48 @@ import qualified Data.Vector.Unboxed as V
 import Data.Vector.Unboxed ((!), (//))
 import Debug.Trace
 import Numeric (readHex, showHex)
-import Twelfth (Graph, connectedComponents)
+import TwelfthLib
 
 data Knots = Knots
   { tMarks :: V.Vector Int
   , tSkip :: Int
   , tPos :: Int
   }
+
+part2 :: T.Text -> Int
+part2 = length . connectedComponents . buildGraph . makeGrid
+
+-- for part two we have to turn it into a grid graph and count
+-- the connected connected components. Because I'm lazy we will
+-- do this with a bunch of slow list indexing etc.
+-- If we can build the adjacency list (where nodes are adjacent
+-- iff they are neighbours with value 1) then we can use all the
+-- functions we've already got
+buildGraph :: [[Int]] -> Graph
+buildGraph mem =
+  fromLists $
+  foldr (findNeighbours mem) [] [(x, y) | x <- [0 .. 127], y <- [0 .. 127]]
+  where
+    findNeighbours hashes pos adj =
+      case getPos hashes pos of
+        1 ->
+          (map flatten .
+           filter (\i -> getPos hashes i == 1) . neighbouringIndices $
+           pos) :
+          adj
+        _ -> [] : adj
+    flatten (a, b) = a + 128 * b
+
+-- this tells me I'm using the wrong data structures
+getPos :: [[a]] -> (Int, Int) -> a
+getPos values (i, j) = values !! i !! j
+
+neighbouringIndices :: (Int, Int) -> [(Int, Int)]
+neighbouringIndices (x, y) =
+  filter inBounds $ map (\(a, b) -> (a + x, b + y)) offsets
+  where
+    inBounds (i, j) = i >= 0 && i < 128 && j >= 0 && j < 128
+    offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 -- for part one we have to take a text, append some stuff and sum
 -- the binary hashes
@@ -89,3 +124,5 @@ main = do
   inputs <- T.IO.getContents
   putStrLn "Part 1"
   print $ part1 inputs
+  putStrLn "Part 2"
+  print $ part2 inputs
