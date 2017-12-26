@@ -1,7 +1,7 @@
 import Data.Foldable (asum)
 import qualified Data.Map.Strict as M
 import Data.Maybe (fromJust)
-import Data.Monoid (Sum, (<>), mempty)
+import Data.Monoid (Sum, (<>), getSum, mempty)
 import qualified Data.Vector as V
 import Text.Parsec
 import Text.Parsec.String (Parser)
@@ -104,4 +104,4 @@ boolToSum False = 0
 main =
   withStdInput parser >>= \parsed -> do
     putStrLn "Part 1"
-    print $ foldMap boolToSum $ iterate (split parsed) initialNode !! 5
+    print $ getSum . foldMap boolToSum $ iterate (split parsed) initialNode !! 5
