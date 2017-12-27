@@ -216,6 +216,26 @@ executable twenty-third
                      , containers
   default-language:    Haskell2010
 
+executable twenty-fourth
+  hs-source-dirs:      days
+  main-is:             TwentyFourth.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , parsec
+                     , containers
+                     , vector
+  default-language:    Haskell2010
+
+executable twenty-fifth
+  hs-source-dirs:      days
+  main-is:             TwentyFifth.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , parsec
+                     , containers
+                     , vector
+  default-language:    Haskell2010
+
 source-repository head
   type:     git
   location: https://github.com/githubuser/adventofcode2017
