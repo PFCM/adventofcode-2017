@@ -51,7 +51,7 @@ rules =
     , ((C, One), Action Zero L A)
     , ((D, Zero), Action One L E)
     , ((D, One), Action One L F)
-    , ((E, Zero), Action One L D)
+    , ((E, Zero), Action One L A)
     , ((E, One), Action Zero L D)
     , ((F, Zero), Action One R A)
     , ((F, One), Action One L E)
