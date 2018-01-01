@@ -11,13 +11,19 @@ import Text.Parsec.String (Parser)
 data ProgramTree = ProgramTree
   { _name :: String
   , _weight :: Int
+  , _totalWeight :: Int
   , _children :: [ProgramTree]
   } deriving (Show)
 
 type Intermediate = ([ProgramNodeInput], M.Map String ProgramTree)
 
 convertNode :: ProgramNodeInput -> [ProgramTree] -> ProgramTree
-convertNode node = ProgramTree (name node) (weight node)
+convertNode node children =
+  ProgramTree
+    (name node)
+    (weight node)
+    (sum . map _totalWeight $ children + weight)
+    children
 
 multiMaybeLookup :: Ord k => M.Map k a -> [k] -> Maybe [a]
 multiMaybeLookup dict = mapM (`M.lookup` dict)
@@ -55,7 +61,7 @@ findRoot progMap = root
         progMap
 
 part1 :: ProgramTree -> String
-part1 = show . _name
+part1 = _name
 
 -- part two -- find a child whose weight doesn't match its siblings and return
 -- what it should be
@@ -109,6 +115,6 @@ main = do
   inputs <- parseStdInput inputParser
   let tree = buildTree inputs
   putStrLn "Part 1"
-  print $ part1 tree
+  putStrLn $ part1 tree
   putStrLn "Part 2"
   print $ part2 tree

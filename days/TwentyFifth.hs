@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 
 data State
   = A
@@ -77,12 +77,19 @@ moveRight tape@Tape {..} = go _left _right _current
     go l [] c = Tape (c : l) [] Zero
     go l (x:r) c = Tape (c : l) r x
 
+-- writing just replaces current
+write :: TapeValue -> Tape -> Tape
+write val tape = tape {_current = val}
+
 -- actually run the thing
 step :: Rules -> ExecutionState -> ExecutionState
 step rs state@ExecutionState {..} =
   let val = _current _tape
-      Action {_write = w, _move = m, _newState = ns} = rs M.! (_state, val)
-  in ExecutionState (move m (_tape {_current = w})) ns
+      Action {..} = rs M.! (_state, val)
+      -- write then move
+      written = write _write _tape
+      moved = move _move written
+  in ExecutionState moved _newState
 
 runs :: [ExecutionState]
 runs = iterate (step rules) $ ExecutionState makeTape A
